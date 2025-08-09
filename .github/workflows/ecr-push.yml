@@ -1,0 +1,68 @@
+name: Build & Push to ECR
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/tour-booking/**'
+      - '.github/workflows/ecr-push.yml'
+  workflow_dispatch:
+
+env:
+  ECR_REPOSITORY: tourbooking-be
+  BACKEND_DIR: backend/tour-booking   # đổi thành '.' nếu pom.xml ở root
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # (debug) in ra cấu trúc để chắc chắn BACKEND_DIR đúng
+      - name: Show layout
+        run: |
+          pwd && ls -la
+          echo "---- BACKEND_DIR ----"
+          ls -la "${{ env.BACKEND_DIR }}"
+
+      # Tạo Dockerfile ngay trong thư mục backend
+      - name: Create Dockerfile
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          cat > Dockerfile <<'EOF'
+          FROM maven:3.9-eclipse-temurin-23 AS build
+          WORKDIR /src
+          COPY pom.xml .
+          COPY .mvn .mvn
+          COPY mvnw mvnw
+          RUN chmod +x mvnw
+          RUN ./mvnw -q -DskipTests dependency:go-offline
+          COPY src ./src
+          RUN ./mvnw -q clean package -DskipTests
+
+          FROM eclipse-temurin:23-jre
+          WORKDIR /app
+          COPY --from=build /src/target/*.jar /app/app.jar
+          EXPOSE 8080
+          ENTRYPOINT ["java","-jar","/app/app.jar"]
+          EOF
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -f ${{ env.BACKEND_DIR }}/Dockerfile -t $ECR_REPOSITORY:$IMAGE_TAG ${{ env.BACKEND_DIR }}
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
