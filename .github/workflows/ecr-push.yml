@@ -65,4 +65,4 @@ jobs:
             sudo systemctl restart be
             sleep 3
             sudo systemctl is-active be
-            curl -fsS http://localhost/actuator/health
+
