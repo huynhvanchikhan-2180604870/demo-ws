@@ -1,0 +1,32 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.register__host h5{
+    font-weight: 900;
+    color: var(--secondary-color);
+    font-size: 70px;
+    font-family: var(--subtitle-font-name);
+}
+
+.register__host button{
+    width: 150px;
+    font-size: 20px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 13px;
+    color: #0b2727;
+    padding: 10px 20px;
+    text-transform: uppercase;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+
+}
+
+.register__host button:hover{
+    transform: scale(1.1);
+}

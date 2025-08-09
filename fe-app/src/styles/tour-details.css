@@ -1,0 +1,234 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.tour__content img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 2.5rem;
+}
+
+
+.tour__info,
+.tour__reviews {
+    border-radius: .5rem;
+    border: 1px solid rgb(229, 231, 235);
+    padding: 2rem;
+    position: relative;
+}
+
+.tour__info h2 {
+    font-size: 1.5rem;
+}
+
+
+.tour__info span {
+    display: flex;
+    align-items: center;
+    columns-gap: 0.5rem;
+    font-style: 1rem;
+    color: var(--text-color);
+}
+
+
+.tour__info span i {
+    color: var(--heading-color);
+    font-size: 1.1rem;
+}
+
+
+.tour__extra-details {
+    display: flex;
+    align-items: center;
+    column-gap: 2.7rem;
+    margin-top: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+
+.tour__info h5 {
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+
+.tour__info p {
+    line-height: 30px;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+
+.rating__group span {
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    color: var(--secondary-color);
+    cursor: pointer;
+}
+
+.tour__reviews h4 {
+    margin-bottom: 3rem;
+}
+
+.review__input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.7rem;
+    border-radius: 2rem;
+    border: 1px solid var(--secondary-color);
+}
+
+
+.review__input input {
+    width: 100%;
+    padding: 0.5rem 0;
+    border: none;
+}
+
+.review__input input:focus {
+    outline: none;
+}
+
+.review__item {
+    display: flex;
+    align-items: center;
+    column-gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.review__item img {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50px;
+    object-fit: cover;
+}
+
+.user__reviews {
+    margin-top: 2.5rem;
+}
+
+.review__item h5 {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+.review__item p {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.review__item h6 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.review__item span i {
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+}
+
+.review__item span {
+    font-weight: 500;
+}
+
+.tour__image {
+    position: relative;
+}
+
+/*
+.tour__image span{
+    position: absolute;
+    color: var(--heading-color);
+    background: var(--secondary-color);
+    text-align: center;
+    width: max-content;
+    font-weight: 800;
+    border-radius: 10px;
+    left: 0;
+    margin: 10px 10px 10px ;
+    font-size: 20px;
+    font-family: var(--font-name);
+    padding: 10px;
+}
+
+.tour__image p{
+    position: absolute;
+    bottom: 0px;
+    right: 10px;
+    color: #ffff;
+    background: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.2rem;
+    padding: 10px;
+    border-radius: 13px;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.tour__image img{
+    width: 100%;
+    height: 460px;
+} */
+
+.tour__host {
+    position: absolute;
+    color: var(--heading-color);
+    background: var(--secondary-color);
+    text-align: center;
+    width: max-content;
+    font-weight: 800;
+    border-radius: 10px;
+    left: 0;
+    margin: 10px 10px 10px;
+    font-size: 20px;
+    font-family: var(--font-name);
+    padding: 10px;
+}
+
+.info__host {
+    position: absolute;
+    top: -20px;
+    background-color: var(--primary-color);
+    color: #ffff !important;
+    padding: 10px;
+    border: none;
+    outline: none;
+    border-radius: 15px;
+}
+
+.isFeature {
+    position: absolute;
+    top: -20px;
+    background-color: var(--secondary-color);
+    color: #ffff !important;
+    padding: 10px;
+    border: none;
+    outline: none;
+    border-radius: 15px;
+    right: 20%;
+}
+
+.report {
+    position: absolute;
+    top: -20px;
+    background-color: #ffff !important;
+    color: #ffff !important;
+    padding: 4px;
+    border: 1px solid var(--primary-color);
+    outline: none;
+    border-radius: 15px;
+    font-size: 20px;
+    right: 0%;
+}
+
+.report .icon__more i {
+    font-size: 20px !important;
+    color: var(--heading-color) !important;
+}

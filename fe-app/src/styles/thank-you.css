@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.thank__you span i {
+    font-size: 4rem;
+    color: green;
+}
+
+.thank__you h1 {
+    font-size: 3.6rem;
+    font-family: var(--subtitle-font-name);
+}
+
+
+.thank__you h4{
+    font-size: 2rem;
+    font-family: 'Poppins',
+        sans-serif;
+}
+
+
+.box__checkin{
+    border: none;
+    margin-top: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 10px;
+    border-radius: 13px;
+    outline: none;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}

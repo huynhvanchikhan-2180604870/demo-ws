@@ -1,0 +1,199 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.booking {
+    padding: 2rem;
+    border-radius: .5rem;
+    border: 1px solid rgb(229, 231, 235);
+    position: sticky;
+    top: 80px;
+}
+
+.button__promotion{
+    border-radius: 20px;
+    border: none;
+    outline: none;
+    color: #fff;
+    background-color: var(--secondary-color);
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+.button__promotion:hover{
+   
+    color: var(--heading-color);
+   
+}
+
+.booking__top h3 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.booking__top h3 span {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text-color);
+}
+
+
+.booking__top span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+
+.booking__top span i {
+    color: var(--secondary-color);
+}
+
+
+.booking__top {
+    padding-top: 2rem;
+    border-bottom: 1px solid rgb(229, 231, 235);
+}
+
+.booking__forms {
+    padding-top: 2rem;
+}
+
+.booking__forms h5 {
+    margin-bottom: rem;
+}
+
+.booking__forms input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 13px;
+    border: 1px solid var(--primary-color);
+    font-size: 1rem;
+    color: var(--heading-color);
+}
+
+.booking__forms input:focus {
+    outline: none;
+}
+
+.booking__info-form {
+    padding: 1rem;
+    border-bottom: 1px solid rgb(229, 231, 235);
+}
+
+.booking__bottom li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.booking__bottom li h5,
+.booking__bottom li span {
+    font-size: 1rem;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.booking__bottom {
+    margin-top: 1rem;
+}
+
+.total h5,
+.total span {
+    color: var(--heading-color) !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+}
+
+.number-input {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--primary-color);
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: #fff;
+    width: 120px;
+    outline: none;
+    /* Đảm bảo kích thước cân đối */
+}
+
+.number-input button {
+    background-color: #f9f9f9;
+    border: none;
+    width: 40px;
+    /* Đảm bảo nút +/- không bị to hoặc nhỏ hơn */
+    height: 40px;
+    /* Chiều cao đồng nhất */
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.number-input button:hover {
+    background-color: #eee;
+}
+
+.number-input input {
+    width: 40px;
+    /* Đảm bảo input nằm gọn giữa */
+    text-align: center;
+    border: none;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    -moz-appearance: textfield;
+    /* Bỏ style mặc định */
+}
+
+.number-input input::-webkit-outer-spin-button,
+.number-input input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    /* Bỏ style mặc định */
+    margin: 0;
+}
+
+.payment-method-group {
+    margin-top: 20px;
+}
+
+.payment-options {
+    display: flex;
+    justify-content: space-between;
+    /* Đặt khoảng cách đều giữa các tùy chọn */
+    align-items: center;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+}
+
+.payment-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+.payment-logo {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}

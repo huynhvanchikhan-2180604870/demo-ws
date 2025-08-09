@@ -1,0 +1,39 @@
+/* Add styles to ensure the sidebar is fixed and aligns properly */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    background-color: #f8f9fa;
+    padding: 16px;
+    overflow-y: auto;
+    z-index: 999;
+    /* Keeps the sidebar on top */
+}
+
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 16px 0;
+    background-color: #f8f9fa;
+}
+
+.submenu-btn {
+    padding: 8px 20px;
+    display: block;
+    width: 100%;
+}
+
+.sidebar .MuiButton-contained {
+    text-align: left;
+}
+
+/* Ensure the content to the right scrolls while the sidebar stays fixed */
+.content {
+    margin-left: 240px;
+    padding: 20px;
+    overflow-y: auto;
+    height: 100vh;
+}

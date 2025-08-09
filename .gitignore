@@ -1,0 +1,83 @@
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages #
+############
+# it's recommended to ignore the following Maven and npm directories:
+/backend/target/
+/fe-app/node_modules/
+/fe-app/build/
+
+# Logs and databases #
+######################
+*.log
+
+*.sqlite
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# IDE-specific files #
+######################
+/.idea/
+*.iml
+*.iws
+*.ipr
+*.swp
+*~
+/fe-app/.vscode/
+
+# Dependency directories #
+##########################
+# Maven and npm dependency directories
+/fe-app/node_modules/
+/backend/target/
+
+# ignore env files #
+####################
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore Maven wrapper files #
+#############################
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Ignore metadata and patch file #
+##################################
+*.orig
+*.rej
+patch/*
+
+# Ignore Bash script compile files #
+####################################
+*.sh~
+
+# Ignore all log and temp files #
+#################################
+*log/
+*tmp/
+
+# Node #
+#######
+/fe-app/npm-debug.log
+/fe-app/yarn-error.log
+/fe-app/package-lock.json
+/fe-app/yarn.lock
+
+# Production #
+##############
+/fe-app/build/

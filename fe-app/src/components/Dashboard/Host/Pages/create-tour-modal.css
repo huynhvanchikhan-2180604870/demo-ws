@@ -1,0 +1,31 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.lable {
+    color: var(--heading-color);
+    font-size: 1.2rem;
+    margin-left: 1.2rem;
+}
+
+.ipu {
+    border: 1px solid var(--secondary-color);
+    outline: none;
+    padding: 15px;
+    border-radius: 30px;
+}
+
+.ipu:focus {
+    border: 1px solid var(--primary-color);
+    outline: none;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+.ckb {
+    font-size: 20px;
+}

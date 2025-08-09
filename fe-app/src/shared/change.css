@@ -1,0 +1,25 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+
+.btn__cancel{
+    background-color: var(--secondary-color) !important;
+    border: none;
+    outline: none;
+    border-radius: 13px !important;
+    color: #6e7074 !important;
+}
+
+.btn__ounltine{
+    /* background-color: var(--secondary-color) !important; */
+        border: none;
+        outline: none;
+        border-radius: 13px !important;
+        color: var(--secondary-color) !important;
+}

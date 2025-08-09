@@ -1,0 +1,17 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.select__info {
+    border: 1px solid var(--secondary-color);
+    padding: 8px;
+    border-radius: 14px;
+    outline: none;
+    width: max-content;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,31 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.qr__checkin {
+    border: none;
+    border-radius: 13px;
+    outline: none;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+}
+
+.btn__download button {
+    border: none;
+    outline: none;
+    padding: 13px;
+    border-radius: 13px;
+    background-color: var(--secondary-color);
+    color: var(--heading-color);
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+    transition: transform 350ms;
+}
+
+.btn__download button:hover {
+    transform: translateY(-5px);
+    color: #ffff;
+}

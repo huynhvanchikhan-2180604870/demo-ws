@@ -1,0 +1,64 @@
+:root {
+    --primary-color: #B7E0FF;
+    --secondary-color: #FFCFB3;
+    --heading-color: #0b2727;
+    --text-color: #6e7074;
+    --font-name: "Montserrat", sans-serif;
+    --subtitle-font-name: "Island Moments", cursive;
+}
+
+.contaie {
+    width: 1000px !important;
+    justify-content: center;
+    align-items: center;
+    margin-left: 100px;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.contaie h4 {
+    font-family: var(--subtitle-font-name);
+    font-size: 50px;
+}
+
+.contaie p {
+    font-family: var(--font-name);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.contaie input {
+    outline: none;
+    border: 1px solid var(--secondary-color);
+    padding: 10px;
+    border-radius: 14px;
+    margin-right: 20px !important;
+}
+.contaie select {
+    outline: none;
+    border: 1px solid var(--secondary-color);
+    padding: 10px;
+    border-radius: 14px;
+    margin-right: 20px !important;
+}
+
+.contaie button {
+    outline: none;
+    border: 1px solid var(--secondary-color);
+    background: white;
+    padding: 10px;
+    border-radius: 14px;
+    margin-right: 20px !important;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+
+.contaie button:hover {
+    background: rgba(255, 255, 255, 0.41) !important;
+}
+
+
+
+.chart {
+    width: 900px !important;
+    margin-left: 50px;
+    padding: 30px;
+}
