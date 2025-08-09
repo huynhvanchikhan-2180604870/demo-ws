@@ -1,68 +1,87 @@
-name: Build & Push to ECR
+name: Build, Push to ECR & Restart EC2
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'backend/tour-booking/**'
-      - '.github/workflows/ecr-push.yml'
-  workflow_dispatch:
+      - "backend/tour-booking/**"
+      - ".github/workflows/ecr-push.yml"
 
 env:
+  AWS_REGION: us-east-1
   ECR_REPOSITORY: tourbooking-be
-  BACKEND_DIR: backend/tour-booking   # đổi thành '.' nếu pom.xml ở root
+
+concurrency:
+  group: deploy-be
+  cancel-in-progress: true
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # (debug) in ra cấu trúc để chắc chắn BACKEND_DIR đúng
-      - name: Show layout
-        run: |
-          pwd && ls -la
-          echo "---- BACKEND_DIR ----"
-          ls -la "${{ env.BACKEND_DIR }}"
-
-      # Tạo Dockerfile ngay trong thư mục backend
-      - name: Create Dockerfile
-        working-directory: ${{ env.BACKEND_DIR }}
-        run: |
-          cat > Dockerfile <<'EOF'
-          FROM maven:3.9-eclipse-temurin-23 AS build
-          WORKDIR /src
-          COPY pom.xml .
-          COPY .mvn .mvn
-          COPY mvnw mvnw
-          RUN chmod +x mvnw
-          RUN ./mvnw -q -DskipTests dependency:go-offline
-          COPY src ./src
-          RUN ./mvnw -q clean package -DskipTests
-
-          FROM eclipse-temurin:23-jre
-          WORKDIR /app
-          COPY --from=build /src/target/*.jar /app/app.jar
-          EXPOSE 8080
-          ENTRYPOINT ["java","-jar","/app/app.jar"]
-          EOF
-
-      - name: Configure AWS credentials
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image
+      - name: Build Docker image
+        working-directory: backend/tour-booking
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
-          IMAGE_TAG: latest
+          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          IMAGE_LATEST: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+          IMAGE_SHA: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
         run: |
-          docker build -f ${{ env.BACKEND_DIR }}/Dockerfile -t $ECR_REPOSITORY:$IMAGE_TAG ${{ env.BACKEND_DIR }}
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build --pull -t "$IMAGE_LATEST" .
+          docker tag "$IMAGE_LATEST" "$IMAGE_SHA"
+
+      - name: Push images to ECR
+        env:
+          IMAGE_LATEST: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+          IMAGE_SHA: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+        run: |
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_LATEST"
+
+  restart-ec2:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restart be service via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          command_timeout: 2m
+          script: |
+            set -euxo pipefail
+
+            # (Tuỳ chọn) login ECR để chắc ăn
+            aws ecr get-login-password --region us-east-1 \
+              | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com || true
+
+            # Restart systemd (đã pull latest trong unit)
+            sudo systemctl restart be
+
+            # Đợi app UP
+            for i in $(seq 1 20); do
+              if curl -fsS http://localhost/actuator/health | grep -q '"status":"UP"'; then
+                echo "Service is UP"; exit 0
+              fi
+              sleep 2
+            done
+
+            # Nếu chưa UP, in log và fail
+            sudo journalctl -u be -n 200 --no-pager || true
+            exit 1
