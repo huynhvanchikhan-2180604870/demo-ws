@@ -2,7 +2,7 @@ name: Build & Deploy BE to EC2
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
     paths:
       - "backend/tour-booking/**"
       - ".github/workflows/ecr-push.yml"
@@ -65,4 +65,4 @@ jobs:
             sudo systemctl restart be
             sleep 3
             sudo systemctl is-active be
-
+            curl -fsS http://localhost/api/v1/tours
