@@ -1,10 +1,10 @@
-import { useDispatch } from "react-redux";
-import { addNewMessage } from "../store/Message/Action";
-import { WebSocketContext } from "./WebSocketContext";
-import { useEffect, useState } from "react";
-import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import SockJS from "sockjs-client";
+import { addNewMessage } from "../store/Message/Action";
 import { IP_PUBLIC } from "./baseUrl";
+import { WebSocketContext } from "./WebSocketContext";
 
 export const WebSocketProvider = ({ children }) => {
   const [stompClient, setStompClient] = useState(null);
@@ -12,16 +12,20 @@ export const WebSocketProvider = ({ children }) => {
 
   useEffect(() => {
     const connectWebSocket = () => {
-      const ip = `http://${IP_PUBLIC}:8080/ws`;
+      const ip = `http://${IP_PUBLIC}/ws`;
       const socket = new SockJS(ip);
       const client = Stomp.over(socket);
 
-      client.connect({}, () => {
-        console.log('WebSocket connected');
-        setStompClient(client);
-      }, (error) => {
-        console.error('WebSocket connection error:', error);
-      });
+      client.connect(
+        {},
+        () => {
+          console.log("WebSocket connected");
+          setStompClient(client);
+        },
+        (error) => {
+          console.error("WebSocket connection error:", error);
+        }
+      );
 
       return () => {
         if (client) {
@@ -37,7 +41,7 @@ export const WebSocketProvider = ({ children }) => {
   const subscribeToSession = (sessionId) => {
     if (stompClient) {
       const subscription = stompClient.subscribe(
-        `/topic/messages/${sessionId}`, 
+        `/topic/messages/${sessionId}`,
         (message) => {
           const receivedMessage = JSON.parse(message.body);
           // Dispatch action to add new message to Redux store
@@ -49,10 +53,12 @@ export const WebSocketProvider = ({ children }) => {
   };
 
   return (
-    <WebSocketContext.Provider value={{ 
-      stompClient, 
-      subscribeToSession 
-    }}>
+    <WebSocketContext.Provider
+      value={{
+        stompClient,
+        subscribeToSession,
+      }}
+    >
       {children}
     </WebSocketContext.Provider>
   );

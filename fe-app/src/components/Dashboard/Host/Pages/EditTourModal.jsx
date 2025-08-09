@@ -2,10 +2,11 @@ import ImageIcon from "@mui/icons-material/Image";
 import { Box, Button, Modal, TextField } from "@mui/material";
 import axios from "axios";
 import { useFormik } from "formik";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { format } from "util";
+import { IP_PUBLIC } from "../../../../config/baseUrl";
 import { createTour } from "../../../../store/Host/Action";
 import { uploadToCloudnary } from "../../../../utils/uploadToCloudnary";
 import "./create-tour-modal.css";
@@ -24,7 +25,7 @@ const style = {
   borderRadius: "20px",
 };
 
-const EditTourModal = ({tour, open, handleClose}) => {
+const EditTourModal = ({ tour, open, handleClose }) => {
   const [categories, setCategories] = useState([]);
   const token = localStorage.getItem("jwt");
   const navigate = useNavigate();
@@ -50,29 +51,28 @@ const EditTourModal = ({tour, open, handleClose}) => {
     }
   };
 
-const formik = useFormik({
-  initialValues: {
-    title: tour?.title || "",
-    category: "",
-    description: tour?.description || "",
-    itinerary: tour?.itinerary || "",
-    price: tour?.price || 0,
-    durationDays: tour?.durationDays || 0,
-    departureDate:
-      format(new Date(tour?.departureDate), "yyyy-MM-dd") ||
-      format(new Date(), "yyyy-MM-dd"),
-    destination: tour?.destination || "",
-    images: tour?.images || [],
-    status: tour?.status || "",
-    featured: tour?.featured || false,
-  },
-  onSubmit: handleSubmit,
-});
-
+  const formik = useFormik({
+    initialValues: {
+      title: tour?.title || "",
+      category: "",
+      description: tour?.description || "",
+      itinerary: tour?.itinerary || "",
+      price: tour?.price || 0,
+      durationDays: tour?.durationDays || 0,
+      departureDate:
+        format(new Date(tour?.departureDate), "yyyy-MM-dd") ||
+        format(new Date(), "yyyy-MM-dd"),
+      destination: tour?.destination || "",
+      images: tour?.images || [],
+      status: tour?.status || "",
+      featured: tour?.featured || false,
+    },
+    onSubmit: handleSubmit,
+  });
 
   useEffect(() => {
     axios
-      .get("http://100.26.47.135:5000/api/v1/tours/categories")
+      .get(`http://${IP_PUBLIC}/api/v1/tours/categories`)
       .then((response) => {
         setCategories(response.data);
       })

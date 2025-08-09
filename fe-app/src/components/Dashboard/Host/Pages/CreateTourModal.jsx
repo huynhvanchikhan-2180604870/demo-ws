@@ -2,11 +2,12 @@ import ImageIcon from "@mui/icons-material/Image";
 import { Box, Button, Modal, TextField } from "@mui/material";
 import axios from "axios";
 import { useFormik } from "formik";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { format } from "util";
+import { IP_PUBLIC } from "../../../../config/baseUrl";
 import { createTour } from "../../../../store/Host/Action";
 import { uploadToCloudnary } from "../../../../utils/uploadToCloudnary";
 import "./create-tour-modal.css";
@@ -96,7 +97,7 @@ const CreateTourModal = ({ open, handleClose }) => {
 
   useEffect(() => {
     axios
-      .get("http://100.26.47.135:5000/api/v1/tours/categories")
+      .get(`http://${IP_PUBLIC}/api/v1/tours/categories`)
       .then((response) => {
         setCategories(response.data);
       })
