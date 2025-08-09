@@ -27,10 +27,6 @@ jobs:
           node-version: "20" # React 18/CRA ok
 
       # Tùy chọn: nếu bạn KHÔNG dùng .env thì step này sẽ tự bỏ qua
-      - name: Write .env (optional)
-        if: ${{ secrets.FE_API_BASE_URL }}
-        working-directory: fe-app
-        run: echo "REACT_APP_API_BASE_URL=${{ secrets.FE_API_BASE_URL }}" > .env
 
       - name: Install deps
         working-directory: fe-app
