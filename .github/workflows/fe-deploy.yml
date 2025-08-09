@@ -1,3 +1,4 @@
+# .github/workflows/fe-deploy.yml
 name: fe-deploy
 
 on:
@@ -14,7 +15,7 @@ concurrency:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: tb-fe-demo-1923 # đổi nếu bạn dùng bucket khác
+  S3_BUCKET: tb-fe-demo-1923
 
 jobs:
   build-and-deploy:
@@ -24,16 +25,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20" # React 18/CRA ok
-
-      # Tùy chọn: nếu bạn KHÔNG dùng .env thì step này sẽ tự bỏ qua
+          node-version: "20"
 
       - name: Install deps
         working-directory: fe-app
         run: npm install
 
-      - name: Build FE
+      - name: Build FE (disable CI warnings=>errors)
         working-directory: fe-app
+        env:
+          CI: "" # <— quan trọng
         run: npm run build
 
       - name: Configure AWS credentials
