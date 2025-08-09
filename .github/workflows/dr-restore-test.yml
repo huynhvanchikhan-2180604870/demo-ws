@@ -1,0 +1,95 @@
+name: dr-restore-test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 18 1 * *" # chạy ngày 1 hàng tháng 18:00 UTC (tùy chỉnh)
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  SOURCE_DB_ID: tb-mysql-primary
+  TEMP_DB_CLASS: db.t3.micro
+  TEMP_DB_PREFIX: tb-drtest
+  EC2_HOST: ec2-3-94-182-69.compute-1.amazonaws.com
+  EC2_USER: ec2-user
+
+jobs:
+  dr-restore-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Find latest automated snapshot
+        id: snap
+        shell: bash
+        run: |
+          set -euo pipefail
+          SNAP_ID=$(aws rds describe-db-snapshots \
+            --db-instance-identifier "$SOURCE_DB_ID" \
+            --snapshot-type automated \
+            --query "reverse(sort_by(DBSnapshots, &SnapshotCreateTime))[0].DBSnapshotIdentifier" \
+            --output text)
+          echo "snapshot=$SNAP_ID" >> $GITHUB_OUTPUT
+          echo "Latest snapshot: $SNAP_ID"
+
+      - name: Restore temp DB
+        id: restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUN_ID=${GITHUB_RUN_ID:-manual}
+          TARGET_ID="${{ env.TEMP_DB_PREFIX }}-${RUN_ID}"
+          aws rds restore-db-instance-from-db-snapshot \
+            --db-instance-identifier "$TARGET_ID" \
+            --db-snapshot-identifier "${{ steps.snap.outputs.snapshot }}" \
+            --db-instance-class "${{ env.TEMP_DB_CLASS }}" \
+            --db-subnet-group-name "${{ vars.RDS_SUBNET_GROUP }}" \
+            --vpc-security-group-ids "${{ vars.RDS_SG_ID }}" \
+            --publicly-accessible
+          echo "target_id=$TARGET_ID" >> $GITHUB_OUTPUT
+          echo "Waiting available..."
+          aws rds wait db-instance-available --db-instance-identifier "$TARGET_ID"
+          EP=$(aws rds describe-db-instances --db-instance-identifier "$TARGET_ID" \
+               --query "DBInstances[0].Endpoint.Address" --output text)
+          echo "endpoint=$EP" >> $GITHUB_OUTPUT
+          echo "Temp endpoint: $EP"
+
+      - name: Smoke test SQL via EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          command_timeout: 15m
+          script: |
+            set -euxo pipefail
+            docker run --rm -e MYSQL_PWD='${{ secrets.DB_PASS }}' mysql:8 \
+              mysql -h '${{ steps.restore.outputs.endpoint }}' \
+                    -u '${{ secrets.DB_USER }}' \
+                    -e "SHOW DATABASES; SELECT COUNT(*) AS tours FROM tourbooking.tours;"
+
+      - name: Cleanup temp DB
+        if: always()
+        shell: bash
+        run: |
+          set -euxo pipefail
+          TARGET_ID="${{ steps.restore.outputs.target_id }}"
+          if [ -n "$TARGET_ID" ]; then
+            aws rds delete-db-instance --db-instance-identifier "$TARGET_ID" --skip-final-snapshot || true
+            aws rds wait db-instance-deleted --db-instance-identifier "$TARGET_ID" || true
+          fi
