@@ -8,29 +8,36 @@ on:
       - ".github/workflows/fe-deploy.yml"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  S3_BUCKET: tb-fe-demo-1923 # Bucket đang bật Static website
+  AWS_REGION: us-east-1
+  S3_BUCKET: tb-fe-demo-1923 # đổi nếu bạn dùng bucket khác
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: fe-app
-
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: fe-app/package-lock.json
+          node-version: "20" # React 18/CRA ok
+
+      # Tùy chọn: nếu bạn KHÔNG dùng .env thì step này sẽ tự bỏ qua
+      - name: Write .env (optional)
+        if: ${{ secrets.FE_API_BASE_URL }}
+        working-directory: fe-app
+        run: echo "REACT_APP_API_BASE_URL=${{ secrets.FE_API_BASE_URL }}" > .env
 
       - name: Install deps
+        working-directory: fe-app
         run: npm ci
 
-      - name: Build
+      - name: Build FE
+        working-directory: fe-app
         run: npm run build
 
       - name: Configure AWS credentials
@@ -38,12 +45,10 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # Đồng bộ build lên S3 (xóa file thừa)
-      - name: Upload to S3
-        run: |
-          aws s3 sync build/ s3://$S3_BUCKET --delete
-          # SPA: đảm bảo HTML không cache để thấy bản mới ngay
-          aws s3 cp build/index.html s3://$S3_BUCKET/index.html \
-            --cache-control "no-cache" --content-type "text/html" --metadata-directive REPLACE
+      - name: Upload to S3 (static website)
+        run: aws s3 sync --delete fe-app/build/ "s3://${S3_BUCKET}/"
+
+      - name: Site URL
+        run: echo "http://${S3_BUCKET}.s3-website-${AWS_REGION}.amazonaws.com"

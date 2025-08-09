@@ -1,22 +1,40 @@
-name: Build & Deploy BE to EC2
+name: be-ci-cd
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
     paths:
       - "backend/tour-booking/**"
       - ".github/workflows/ecr-push.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: tourbooking-be
 
 jobs:
-  build_and_push:
+  build-push-and-restart:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      # Build JAR trước để hỗ trợ cả Dockerfile single-stage (COPY target/*.jar)
+      # lẫn multi-stage (không ảnh hưởng)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "23"
+
+      - name: Build JAR
+        working-directory: backend/tour-booking
+        run: |
+          chmod +x mvnw || true
+          ./mvnw -q -DskipTests package
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -25,39 +43,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get AWS Account ID
-        id: aws
-        run: echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region $AWS_REGION \
-          | docker login --username AWS --password-stdin \
-            ${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
-
-      - name: Build & Push image
-        working-directory: backend/tour-booking
+      - name: Build & push Docker image
         env:
-          REGISTRY: ${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-          IMAGE: ${{ env.ECR_REPOSITORY }}
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
           set -euxo pipefail
-          IMAGE_LATEST="$REGISTRY/$IMAGE:latest"
-          IMAGE_SHA="$REGISTRY/$IMAGE:${GITHUB_SHA}"
-          docker build --pull -t "$IMAGE_LATEST" -t "$IMAGE_SHA" .
+          IMAGE_LATEST="$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          IMAGE_SHA="$ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_SHA}"
+          docker build --pull -t "$IMAGE_LATEST" -t "$IMAGE_SHA" backend/tour-booking
           docker push "$IMAGE_LATEST"
           docker push "$IMAGE_SHA"
 
-  restart_ec2:
-    needs: build_and_push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restart service via SSH
+      - name: Restart service on EC2 (SSH)
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.SSH_HOST }}
+          host: ${{ secrets.SSH_HOST }} # ví dụ: ec2-xx-xx-xx-xx.compute-1.amazonaws.com
           username: ec2-user
-          key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_KEY }} # nội dung private key PEM
           script_stop: true
           command_timeout: 10m
           script: |
@@ -65,4 +71,4 @@ jobs:
             sudo systemctl restart be
             sleep 3
             sudo systemctl is-active be
-            curl -fsS http://localhost/api/v1/tours
+            curl -fsS http://localhost/actuator/health || (sudo journalctl -u be --no-pager -n 100; exit 1)
