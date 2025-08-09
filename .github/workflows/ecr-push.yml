@@ -1,8 +1,8 @@
-name: Build, Push to ECR & Restart EC2
+name: Build & Deploy BE to EC2
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
     paths:
       - "backend/tour-booking/**"
       - ".github/workflows/ecr-push.yml"
@@ -11,77 +11,58 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: tourbooking-be
 
-concurrency:
-  group: deploy-be
-  cancel-in-progress: true
-
 jobs:
-  build-and-push:
+  build_and_push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Get AWS Account ID
+        id: aws
+        run: echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
 
-      - name: Build Docker image
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION \
+          | docker login --username AWS --password-stdin \
+            ${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Build & Push image
         working-directory: backend/tour-booking
         env:
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-          IMAGE_LATEST: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
-          IMAGE_SHA: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          REGISTRY: ${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          IMAGE: ${{ env.ECR_REPOSITORY }}
         run: |
-          docker build --pull -t "$IMAGE_LATEST" .
-          docker tag "$IMAGE_LATEST" "$IMAGE_SHA"
-
-      - name: Push images to ECR
-        env:
-          IMAGE_LATEST: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
-          IMAGE_SHA: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-        run: |
-          docker push "$IMAGE_SHA"
+          set -euxo pipefail
+          IMAGE_LATEST="$REGISTRY/$IMAGE:latest"
+          IMAGE_SHA="$REGISTRY/$IMAGE:${GITHUB_SHA}"
+          docker build --pull -t "$IMAGE_LATEST" -t "$IMAGE_SHA" .
           docker push "$IMAGE_LATEST"
+          docker push "$IMAGE_SHA"
 
-  restart-ec2:
-    needs: build-and-push
+  restart_ec2:
+    needs: build_and_push
     runs-on: ubuntu-latest
     steps:
-      - name: Restart be service via SSH
+      - name: Restart service via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          username: ec2-user
           key: ${{ secrets.SSH_KEY }}
           script_stop: true
-          command_timeout: 2m
+          command_timeout: 10m
           script: |
             set -euxo pipefail
-
-            # (Tuỳ chọn) login ECR để chắc ăn
-            aws ecr get-login-password --region us-east-1 \
-              | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com || true
-
-            # Restart systemd (đã pull latest trong unit)
             sudo systemctl restart be
-
-            # Đợi app UP
-            for i in $(seq 1 20); do
-              if curl -fsS http://localhost/actuator/health | grep -q '"status":"UP"'; then
-                echo "Service is UP"; exit 0
-              fi
-              sleep 2
-            done
-
-            # Nếu chưa UP, in log và fail
-            sudo journalctl -u be -n 200 --no-pager || true
-            exit 1
+            sleep 3
+            sudo systemctl is-active be
+            curl -fsS http://localhost/actuator/health
