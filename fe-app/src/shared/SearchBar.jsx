@@ -1,8 +1,9 @@
 import { Autocomplete, TextField } from "@mui/material";
 import axios from "axios";
 import { useFormik } from "formik";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Col, Form, FormGroup } from "reactstrap";
+import { IP_PUBLIC } from "../config/baseUrl";
 import "./search-bar.css";
 
 export const SearchBar = ({ onSearch }) => {
@@ -24,7 +25,7 @@ export const SearchBar = ({ onSearch }) => {
   useEffect(() => {
     // Fetch categories from the API
     axios
-      .get("http://54.174.111.68:5000/api/v1/tours/categories")
+      .get(`http://${IP_PUBLIC}/api/v1/tours/categories`)
       .then((response) => {
         console.log("category: ", response.data);
         setCategories(response.data);
@@ -33,7 +34,7 @@ export const SearchBar = ({ onSearch }) => {
 
     // Fetch destinations from the API
     axios
-      .get("http://54.174.111.68:5000/api/v1/tours/destinations")
+      .get(`http://${IP_PUBLIC}/api/v1/tours/destinations`)
       .then((response) => {
         console.log("destinations: ", response.data);
         setDestinations(response.data);
@@ -67,7 +68,8 @@ export const SearchBar = ({ onSearch }) => {
                 renderOption={(props, option) => (
                   <li {...props}>
                     {option?.name}{" "}
-                    <span key={option.id}
+                    <span
+                      key={option.id}
                       style={{
                         color: "gray",
                         fontSize: "15px",
