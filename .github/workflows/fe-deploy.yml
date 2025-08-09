@@ -1,19 +1,18 @@
-name: FE Build & Deploy (S3)
+name: fe-deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
     paths:
       - "fe-app/**"
       - ".github/workflows/fe-deploy.yml"
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
-  S3_BUCKET: tb-fe-demo-1923
+  S3_BUCKET: tb-fe-demo-1923 # Bucket đang bật Static website
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,42 +27,23 @@ jobs:
           cache: "npm"
           cache-dependency-path: fe-app/package-lock.json
 
-      # Nếu muốn nhận BASE URL từ secret (khuyên dùng):
-      - name: Write .env.production (optional)
-        if: ${{ secrets.FE_API_BASE_URL != '' }}
-        run: |
-          echo "FE_API_BASE_URL=${{ secrets.FE_API_BASE_URL }}" > .env.production
-          cat .env.production
-
       - name: Install deps
         run: npm ci
 
       - name: Build
         run: npm run build
 
-      - name: Detect build dir
-        id: out
-        run: |
-          if [ -d "build" ]; then echo "dir=build" >> $GITHUB_OUTPUT;
-          elif [ -d "dist" ]; then echo "dir=dist" >> $GITHUB_OUTPUT;
-          else echo "No build/dist dir"; exit 1; fi
-
-      - name: Configure AWS creds
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Sync assets (cache dài)
+      # Đồng bộ build lên S3 (xóa file thừa)
+      - name: Upload to S3
         run: |
-          aws s3 sync "${{ steps.out.outputs.dir }}/" "s3://${S3_BUCKET}/" \
-            --delete --exclude "index.html" \
-            --cache-control "public, max-age=31536000, immutable" \
-            --only-show-errors
-
-      - name: Upload index.html (no-cache)
-        run: |
-          aws s3 cp "${{ steps.out.outputs.dir }}/index.html" "s3://${S3_BUCKET}/index.html" \
-            --cache-control "no-cache" \
-            --only-show-errors
+          aws s3 sync build/ s3://$S3_BUCKET --delete
+          # SPA: đảm bảo HTML không cache để thấy bản mới ngay
+          aws s3 cp build/index.html s3://$S3_BUCKET/index.html \
+            --cache-control "no-cache" --content-type "text/html" --metadata-directive REPLACE
